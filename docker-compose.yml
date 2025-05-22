@@ -5,3 +5,12 @@ services:
       context: ./server/subscription
     ports:
       - "8080:8080"
+
+  auth:
+    container_name: auth
+    build:
+      context: ./server/auth
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./server/auth/.env
