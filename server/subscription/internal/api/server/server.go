@@ -1,30 +1,29 @@
-package api
+package server
 
 import (
 	"context"
 	"fmt"
 	"log/slog"
+	"subscription/internal/api"
 	"subscription/internal/api/routes"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/idsulik/go-collections/deque"
 )
 
 type APIServer struct {
 	server *fiber.App
-	queue  *deque.Deque[string]
+	queue  api.Queue
 }
 
-func NewAPIServer() *APIServer {
+func NewAPIServer(queue api.Queue) *APIServer {
 	api := &APIServer{
 		server: fiber.New(),
-		queue:  deque.New[string](10),
+		queue:  queue,
 	}
 
 	apiVersion := api.server.Group("/api/v1")
 
 	routes.RegisterSubsRoutes(apiVersion, api.queue)
-
 	return api
 }
 
@@ -37,6 +36,6 @@ func (a *APIServer) Shutdown(ctx context.Context) error {
 	if err := a.server.ShutdownWithContext(ctx); err != nil {
 		return fmt.Errorf("HTTP server shutdown error: %w", err)
 	}
-	
+
 	return nil
 }

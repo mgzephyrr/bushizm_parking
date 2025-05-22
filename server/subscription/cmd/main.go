@@ -6,13 +6,16 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
-	"subscription/internal/api"
+	"subscription/internal/api/server"
+	"subscription/internal/storage/inmem"
 	"syscall"
 	"time"
 )
 
 func main() {
-	server := api.NewAPIServer()
+	queue := inmem.NewInMemStorage()
+
+	server := server.NewAPIServer(queue)
 	serverErr := make(chan error, 1)
 
 	go func() {

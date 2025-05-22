@@ -1,15 +1,25 @@
 package handlers
 
 import (
+	"subscription/internal/api"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
-	"github.com/idsulik/go-collections/deque"
 )
 
-func CreateSubscription(queue *deque.Deque[string]) func (c *fiber.Ctx) error {
+func CreateSubscription(queue api.Queue) func (c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		sub := "Added new sub!"
-		queue.PushFront(sub)
+		now := time.Now()
+		
+		id, err := getIntVariable(c, "id")
+		if err != nil {
+			return fiber.NewError(fiber.StatusUnprocessableEntity, err.Error())
+		}
 
-		return c.SendString("Added you to queue")
+		sub, err := queue.AddSubToEnd(id, now)
+		if err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+		return c.Status(fiber.StatusOK).JSON(sub)
 	}
 }
