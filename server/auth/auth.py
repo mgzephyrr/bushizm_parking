@@ -47,6 +47,7 @@ async def authenticate_user_by_phone(phone: str, response: Response):
     for user in users_data:
         if user.get("phone") == phone:
             user_id = str(user.get("id"))
+            full_name = f"{user.get('surname', '')} {user.get('name', '')} {user.get('patronymic', '')}".strip()
             jwt_token = create_access_token({"sub": user_id})
 
             response.set_cookie(
@@ -58,7 +59,9 @@ async def authenticate_user_by_phone(phone: str, response: Response):
                 samesite="Lax"
             )
 
-            return {"message": "Authenticated", "user_id": user_id}
+            return {"message": "Authenticated", 
+                    "user_id": user_id,
+                    "full_name": full_name}
 
     raise HTTPException(status_code=404, detail=f"User with phone {phone} not found")
 
