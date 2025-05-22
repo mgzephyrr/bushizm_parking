@@ -1,0 +1,69 @@
+package handlers
+
+import (
+	"log/slog"
+	"subscription/internal/api"
+	"subscription/internal/api/models"
+	"time"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+type CarEvent struct {
+	Data    CarEventData `json:"data"`
+	Code    int          `json:"code"`
+	Message string       `json:"message"`
+}
+
+type CarEventData struct {
+	EventID               string           `json:"event_id"`
+	AccessPointID         string           `json:"access_point_id"`
+	Direction             models.Direction `json:"direction"`
+	CreatedAt             time.Time        `json:"timestamp"`
+	LicensePlate          string           `json:"license_plate"`
+	RecognitionConfidence float32          `json:"recognition_confidence"`
+}
+
+func HandleCarEvent(queue api.Queue) func(c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		carEvent := new(CarEvent)
+
+		now := time.Now()
+
+		if err := c.BodyParser(carEvent); err != nil {
+			return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid request body: "+err.Error())
+		}
+
+		if carEvent.Data.Direction == models.DirectionIn {
+			return handleCarIn(queue, carEvent, now)
+		}
+
+		return handleCarOut(queue, carEvent, now)
+	}
+}
+
+func handleCarIn(queue api.Queue, carEvent *CarEvent, now time.Time) error {
+	slog.Info("Processing Car In...")
+	err := queue.RemoveFromNotificationQueue(now)
+	if err != nil {
+		return fiber.NewError(
+			fiber.StatusInternalServerError,
+			"Internal error while removing entry from notification queue: "+err.Error(),
+		)
+	}
+
+	return nil
+}
+
+func handleCarOut(queue api.Queue, carEvent *CarEvent, now time.Time) error {
+	slog.Info("Processing Car Out...")
+	err := queue.MoveToNotificationQueue(now)
+	if err != nil {
+		return fiber.NewError(
+			fiber.StatusInternalServerError,
+			"Internal error while adding entry to notification queue: "+err.Error(),
+		)
+	}
+
+	return nil
+}

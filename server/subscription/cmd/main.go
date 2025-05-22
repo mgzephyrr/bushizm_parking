@@ -13,7 +13,10 @@ import (
 )
 
 func main() {
-	queue := inmem.NewInMemStorage()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	queue := inmem.NewInMemStorage(ctx)
 
 	server := server.NewAPIServer(queue)
 	serverErr := make(chan error, 1)
@@ -33,6 +36,7 @@ func main() {
 	case err := <-serverErr:
 		slog.Error(fmt.Sprintf("Server error: %s", err.Error()))
 	}
+	cancel()
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()

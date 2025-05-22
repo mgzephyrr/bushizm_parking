@@ -8,6 +8,7 @@ import (
 	"subscription/internal/api/routes"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 type APIServer struct {
@@ -21,9 +22,20 @@ func NewAPIServer(queue api.Queue) *APIServer {
 		queue:  queue,
 	}
 
+	api.server.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:5173, https://gofiber.net",
+		AllowHeaders: "Origin, Content-Type, Accept",
+	}))
+	api.server.Use(func(c *fiber.Ctx) error {
+		bodyBytes := c.Body()
+		slog.Info(fmt.Sprintf("Request Body: %s", string(bodyBytes)))
+		return c.Next()
+	})
+
 	apiVersion := api.server.Group("/api/v1")
 
 	routes.RegisterSubsRoutes(apiVersion, api.queue)
+	routes.RegisterCarEventsRoutes(apiVersion, api.queue)
 	return api
 }
 
