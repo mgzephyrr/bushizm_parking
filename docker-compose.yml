@@ -1,0 +1,7 @@
+services:
+  subscription:
+    container_name: subscription
+    build:
+      context: ./server/subscription
+    ports:
+      - "8080:8080"
