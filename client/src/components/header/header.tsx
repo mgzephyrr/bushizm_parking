@@ -5,8 +5,12 @@ interface IHeaderProps {
 }
 
 export default function Header({children}: IHeaderProps) {
-    return(
-        <div style={{display:"flex", backgroundColor:"#569EB7", height:"100px"}}>
+    return (
+        <div style={{
+            boxSizing: "border-box",
+            backgroundColor: "#569EB7",
+            height: "100px",
+        }}>
             {children}
         </div>
     )
