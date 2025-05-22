@@ -14,3 +14,14 @@ services:
       - "8000:8000"
     env_file:
       - ./server/auth/.env
+  
+  notification:
+    container_name: notification
+    build:
+      context: ./server/notification
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./server/notification/.env
+    depends_on:
+      - auth
