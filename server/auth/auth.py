@@ -55,7 +55,7 @@ async def authenticate_user_by_phone(phone: str, response: Response):
                 value=jwt_token,
                 httponly=True,
                 max_age=3600,
-                secure=False,  # если нужен HTTPS только — поставь True
+                secure=False,
                 samesite="Lax"
             )
 
