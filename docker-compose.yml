@@ -1,4 +1,12 @@
 services:
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:3000"
+
   subscription:
     container_name: subscription
     build:
