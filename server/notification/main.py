@@ -8,21 +8,17 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:8000", "http://localhost:8080"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:8000", "http://localhost:8080", "http://localhost:8001"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 queued_user_ids = set()
 
 USER_CHAT_MAP = {
     "2814589": "35631"
 }
-
-class TokenRequest(BaseModel):
-    user_id: str
 
 @app.post("/queue")
 async def add_to_queue(data: dict):
@@ -34,11 +30,12 @@ async def add_to_queue(data: dict):
     return {"status": "queued", "user_id": user_id}
 
 @app.post("/notify")
-async def notify(request_data: TokenRequest):
+async def notify(request: Request):
     try:
-        token = request_data.token
+        token = request.cookies.get("access_token")
+        
         if not token:
-            raise HTTPException(status_code=400, detail="Missing token")
+            raise HTTPException(status_code=401, detail="Missing access_token")
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
