@@ -21,9 +21,6 @@ USER_CHAT_MAP = {
     "2814589": "35631"
 }
 
-class TokenRequest(BaseModel):
-    token: str
-
 @app.post("/queue")
 async def add_to_queue(data: dict):
     user_id = data.get("user_id")
@@ -34,11 +31,11 @@ async def add_to_queue(data: dict):
     return {"status": "queued", "user_id": user_id}
 
 @app.post("/notify")
-async def notify(request_data: TokenRequest):
+async def notify(request: Request):
     try:
-        token = request_data.token
+        token = request.cookies.get("access_token")
         if not token:
-            raise HTTPException(status_code=400, detail="Missing token")
+            raise HTTPException(status_code=401, detail="Missing access_token")
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
