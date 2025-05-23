@@ -15,7 +15,7 @@ export default function MainPage() {
     const [notifyState, setNotifyState] = useState("")
 
     const dispatch = useDispatch();
-    const {data, refetch: refetchNotify} = useGetNotifyQuery("")
+    const {data, refetch: refetchNotify} = useGetNotifyQuery(null)
     const [trigger] = useLazyGetSubscribeQuery()
     const [loginTrigger] = useGetLoginMutation()
     const [logoutTrigger] = useGetLogoutMutation()
