@@ -33,6 +33,7 @@ func (w *QueueWorker) Process(ctx context.Context) {
 				if !ok {
 					break
 				}
+				slog.Info("User ID", slog.Int("ID", sub.UserID))
 				if sub.ExpiresAt.Before(now) {
 					w.storage.NotifiedQueuePopBack()
 					w.storage.MoveToNotificationQueue(now)
@@ -42,12 +43,6 @@ func (w *QueueWorker) Process(ctx context.Context) {
 				err := sub.Notify()
 				if err != nil {
 					slog.Error("Error while notifying", slog.String("error", err.Error()))
-
-					// if sub.AttemptsLeft > 0 {
-					// 	slog.Info(fmt.Sprintf("Sub with userID = %d lost 1 attempt", sub.UserID))
-					// 	sub.AttemptsLeft -= 1
-					// 	break
-					// }
 				}
 
 				w.storage.NotifiedQueuePopBack()

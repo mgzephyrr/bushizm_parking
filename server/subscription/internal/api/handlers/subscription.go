@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"subscription/internal/api"
 	"time"
 
@@ -59,7 +60,7 @@ func CreateSubscription(queue api.Queue) func(c *fiber.Ctx) error {
 }
 
 type userIDResponse struct {
-	UserID int `json:"json_id"`
+	UserID string `json:"user_id"`
 }
 
 func GetUserID(authCookie string) (int, error) {
@@ -75,11 +76,17 @@ func GetUserID(authCookie string) (int, error) {
 		return 0, err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://localhost:8000/extract_user_id", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		"http://auth:8000/extract_user_id",
+		bytes.NewBuffer(jsonData),
+	)
 	if err != nil {
 		slog.Error("Error while creating request", slog.String("error", err.Error()))
 		return 0, err
 	}
+	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{
 		Timeout: 10 * time.Second,
@@ -89,10 +96,12 @@ func GetUserID(authCookie string) (int, error) {
 	resp, err := client.Do(req)
 	if err != nil {
 		slog.Error("Error while requesting service", slog.String("error", err.Error()))
+		return 0, err
 	}
 	defer func() {
-		if resp == nil {
+		if resp == nil || resp.Body == nil {
 			slog.Info("Could not get a response")
+			return
 		}
 
 		if err := resp.Body.Close(); err != nil {
@@ -111,5 +120,5 @@ func GetUserID(authCookie string) (int, error) {
 		return 0, err
 	}
 
-	return response.UserID, nil
+	return strconv.Atoi(response.UserID)
 }

@@ -14,7 +14,6 @@ export const subscriptionsApi = createApi({
         getSpotsNumber: build.query<{ spots_number: number }, null>({
             query: () => ({
                 url: '/spotsnumber',
-                method: 'POST',
             })
         }),
     }),

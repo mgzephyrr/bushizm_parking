@@ -4,7 +4,7 @@ import {useEffect, useState} from "react";
 import styles from "./main-page.module.css"
 import Header from "../../components/header/header.tsx";
 import Footer from "../../components/footer/footer.tsx";
-import {useGetLoginMutation, useGetLogoutMutation, useGetMeQuery} from "../../app/api/auth/auth.ts";
+import {useGetLoginMutation, useGetLogoutMutation} from "../../app/api/auth/auth.ts";
 import {useDispatch, useSelector} from "react-redux";
 import type {RootState} from "../../app/api/store.ts";
 import {logout} from "../../app/api/slice/user-slice.ts";
@@ -15,31 +15,33 @@ import {UjinLogo} from "../../assets/icons/UjinLogo.tsx";
 
 export default function MainPage() {
     const userName = useSelector((state: RootState) => state.user.full_name)
-    const [notifyState, setNotifyState] = useState("")
 
     const dispatch = useDispatch();
 
-    const {data: spotsNumberData} = useGetSpotsNumberQuery(null)
+    const {data: spotsNumberData, refetch: refetchSpots} = useGetSpotsNumberQuery(null)
     const {data, refetch: refetchNotify} = useGetNotifyQuery(null)
+    const [isAlert, setIsAlert] = useState(false)
     const [trigger] = useLazyGetSubscribeQuery()
     const [loginTrigger] = useGetLoginMutation()
     const [logoutTrigger] = useGetLogoutMutation()
 
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            refetchNotify()
-            if (!notifyState) {
-                setNotifyState(data?.send ?? "")
+      useEffect(() => {
+        const interval = setInterval(async () => {
+          try {
+            const { data } = await refetchNotify(); // Выполняем запрос
+            refetchSpots()
+            if (data?.send === "yes") {
+              alert("Для вас освободилось место на парковке");
             }
-            if (notifyState && notifyState !== data?.send) {
-                alert("Для вас освободилось место на парковке")
-            }
-        }, 15000);
+          } catch (error) {
+            console.error("Ошибка при проверке уведомлений:", error);
+          }
+        }, 3000);
 
         return () => clearInterval(interval);
-    }, [refetchNotify]);
+      }, [refetchNotify]); // Зависимость только от refetchNotify
 
     const handleModalClose = () => {
         setIsModalOpen(false);
@@ -72,7 +74,6 @@ export default function MainPage() {
             <div className={styles.mainSectionWrapper}>
                 <div className={styles.countSection}>
                     <div>{spotsNumberData?.spots_number ?? 0} свободных мест</div>
-                    <div>0 людей в очереди</div>
                 </div>
 
                 <div className={styles.buttonSection}>

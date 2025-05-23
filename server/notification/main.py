@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
 from pydantic import BaseModel
@@ -8,7 +8,8 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:8000", "http://localhost:8080", "http://localhost:8001"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174",
+                   "http://localhost:8000", "http://localhost:8080", "http://localhost:8001"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -20,20 +21,19 @@ USER_CHAT_MAP = {
     "2814589": "35631"
 }
 
-@app.post("/queue")
-async def add_to_queue(data: dict):
-    user_id = data.get("user_id")
-    if not user_id:
-        raise HTTPException(status_code=400, detail="Missing user_id")
 
-    queued_user_ids.add(str(user_id))
+@app.post("/queue")
+async def add_to_queue(user_id: str = Body(..., embed=True)):
+    queued_user_ids.add(user_id)
+    print(queued_user_ids)
     return {"status": "queued", "user_id": user_id}
+
 
 @app.post("/notify")
 async def notify(request: Request):
     try:
         token = request.cookies.get("access_token")
-        
+
         if not token:
             raise HTTPException(status_code=401, detail="Missing access_token")
 
@@ -70,13 +70,20 @@ async def notify(request: Request):
             "Authorization": f"Token {BOT_TOKEN}"
         }
 
-        async with httpx.AsyncClient() as client:
+        # print("HERE!")
+
+        timeout = httpx.Timeout(10.0, connect=5.0, read=10.0)
+
+        async with httpx.AsyncClient(timeout=timeout) as client:
             send_response = await client.post(api_url, json=payload, headers=headers)
             send_response.raise_for_status()
+
+        # print("HERE! END!")
 
         return {"send": "yes"}
 
     except httpx.HTTPStatusError as e:
-        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+        raise HTTPException(
+            status_code=e.response.status_code, detail=e.response.text)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
