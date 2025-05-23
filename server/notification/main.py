@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
+from pydantic import BaseModel
 from utils import BOT_TOKEN, AUTH_SERVICE_URL, verify_token
 
 app = FastAPI()
@@ -20,25 +21,37 @@ USER_CHAT_MAP = {
     "2814589": "35631"
 }
 
+class TokenRequest(BaseModel):
+    token: str
+
 @app.post("/queue")
 async def add_to_queue(data: dict):
     user_id = data.get("user_id")
     if not user_id:
         raise HTTPException(status_code=400, detail="Missing user_id")
-    
+
     queued_user_ids.add(str(user_id))
     return {"status": "queued", "user_id": user_id}
 
 @app.post("/notify")
-async def notify(request: Request):
+async def notify(request_data: TokenRequest):
     try:
-        token = request.cookies.get("access_token")
+        token = request_data.token
         if not token:
-            raise HTTPException(status_code=401, detail="Missing access_token")
+            raise HTTPException(status_code=400, detail="Missing token")
 
-        user_id = verify_token(token)
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{AUTH_SERVICE_URL}/extract_user_id",
+                json={"token": token}
+            )
+
+        if response.status_code != 200:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        user_id = response.json().get("user_id")
         if not user_id:
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
+            raise HTTPException(status_code=401, detail="No user_id extracted")
 
         if str(user_id) not in queued_user_ids:
             return {"send": "no"}
@@ -61,8 +74,8 @@ async def notify(request: Request):
         }
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(api_url, json=payload, headers=headers)
-            response.raise_for_status()
+            send_response = await client.post(api_url, json=payload, headers=headers)
+            send_response.raise_for_status()
 
         return {"send": "yes"}
 
