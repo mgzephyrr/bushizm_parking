@@ -23,8 +23,9 @@ func NewAPIServer(queue api.Queue) *APIServer {
 	}
 
 	api.server.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:5173, http://localhost:5174, http://localhost:8000, http://localhost:8001",
-		AllowHeaders: "Origin, Content-Type, Accept",
+		AllowOrigins:     "http://localhost:5173, http://localhost:5174, http://localhost:8000, http://localhost:8001",
+		AllowHeaders:     "Origin, Content-Type, Accept",
+		AllowCredentials: true,
 	}))
 	api.server.Use(func(c *fiber.Ctx) error {
 		bodyBytes := c.Body()
