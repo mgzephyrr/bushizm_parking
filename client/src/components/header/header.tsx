@@ -1,4 +1,5 @@
 import React from "react";
+import styles from "./header.module.css";
 
 interface IHeaderProps {
     children?: React.ReactNode;
@@ -6,11 +7,7 @@ interface IHeaderProps {
 
 export default function Header({children}: IHeaderProps) {
     return (
-        <div style={{
-            boxSizing: "border-box",
-            backgroundColor: "#569EB7",
-            height: "100px",
-        }}>
+        <div className={styles.header}>
             {children}
         </div>
     )
