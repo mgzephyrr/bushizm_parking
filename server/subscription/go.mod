@@ -5,6 +5,7 @@ go 1.23.5
 require (
 	github.com/gofiber/fiber/v2 v2.52.8
 	github.com/idsulik/go-collections v1.2.3
+	github.com/joho/godotenv v1.5.1
 )
 
 require (

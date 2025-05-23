@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -10,10 +11,19 @@ import (
 	"subscription/internal/storage/inmem"
 	"syscall"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	queue := inmem.NewInMemStorage()
+	if err := godotenv.Load("../.env"); err != nil {
+		log.Fatal("Error loading .env file", err.Error())
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	queue := inmem.NewInMemStorage(ctx)
 
 	server := server.NewAPIServer(queue)
 	serverErr := make(chan error, 1)
@@ -33,6 +43,7 @@ func main() {
 	case err := <-serverErr:
 		slog.Error(fmt.Sprintf("Server error: %s", err.Error()))
 	}
+	cancel()
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()

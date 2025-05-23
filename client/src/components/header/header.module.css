@@ -1,0 +1,7 @@
+.header {
+    box-sizing: border-box;
+    height: 100px;
+    background: linear-gradient(0.25turn, #e8aaaa, #66BECF, #3C3164);
+    border-bottom: 1px solid #000000;
+    box-shadow: 0 10px 25px 7px #1C1A1B;
+}
