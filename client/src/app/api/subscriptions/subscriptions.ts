@@ -3,7 +3,7 @@ import {createApi} from "@reduxjs/toolkit/query/react";
 
 export const subscriptionsApi = createApi({
     reducerPath: 'subscriptionsApi',
-    baseQuery: fetchBaseQuery({baseUrl: 'http://127.0.0.1:8080/api/v1/', credentials: "include"}),
+    baseQuery: fetchBaseQuery({baseUrl: 'http://localhost:8080/api/v1/', credentials: "include"}),
     endpoints: (build) => ({
         getSubscribe: build.query<null, null>({
             query: () => ({
@@ -11,7 +11,13 @@ export const subscriptionsApi = createApi({
                 method: 'POST',
             })
         }),
+        getSpotsNumber: build.query<{ spots_number: number }, null>({
+            query: () => ({
+                url: '/spotsnumber',
+                method: 'POST',
+            })
+        }),
     }),
 })
 
-export const {useLazyGetSubscribeQuery} = subscriptionsApi
+export const {useLazyGetSubscribeQuery, useGetSpotsNumberQuery} = subscriptionsApi
