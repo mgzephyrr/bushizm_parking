@@ -4,7 +4,7 @@ import {useEffect, useState} from "react";
 import styles from "./main-page.module.css"
 import Header from "../../components/header/header.tsx";
 import Footer from "../../components/footer/footer.tsx";
-import {useGetLoginMutation, useGetLogoutMutation} from "../../app/api/auth/auth.ts";
+import {useGetLoginMutation, useGetLogoutMutation, useGetMeQuery} from "../../app/api/auth/auth.ts";
 import {useDispatch, useSelector} from "react-redux";
 import type {RootState} from "../../app/api/store.ts";
 import {logout} from "../../app/api/slice/user-slice.ts";
@@ -15,6 +15,8 @@ export default function MainPage() {
     const [notifyState, setNotifyState] = useState("")
 
     const dispatch = useDispatch();
+    const {data: userId} = useGetMeQuery(null, {skip: !userName})
+    console.log(userId)
     const {data, refetch: refetchNotify} = useGetNotifyQuery(null)
     const [trigger] = useLazyGetSubscribeQuery()
     const [loginTrigger] = useGetLoginMutation()

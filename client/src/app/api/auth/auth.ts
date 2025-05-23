@@ -4,7 +4,7 @@ import type {ILoginRequest, ILoginResponse} from "./types.ts";
 
 export const authApi = createApi({
     reducerPath: 'authApi',
-    baseQuery: fetchBaseQuery({baseUrl: 'http://127.0.0.1:8000/', credentials: "include",}),
+    baseQuery: fetchBaseQuery({baseUrl: 'http://localhost:8000', credentials: "include",}),
     endpoints: (build) => ({
         getLogin: build.mutation<ILoginResponse, ILoginRequest>({
             query: (credentials) => ({
@@ -19,7 +19,12 @@ export const authApi = createApi({
                 method: 'POST',
             })
         }),
+        getMe: build.query<{ user_id: string }, null>({
+            query: () => ({
+                url: '/me',
+            })
+        }),
     }),
 })
 
-export const {useGetLoginMutation, useGetLogoutMutation} = authApi
+export const {useGetLoginMutation, useGetLogoutMutation, useGetMeQuery} = authApi
