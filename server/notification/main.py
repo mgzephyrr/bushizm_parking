@@ -21,6 +21,9 @@ USER_CHAT_MAP = {
     "2814589": "35631"
 }
 
+class UserRequest(BaseModel):
+    user_id: str
+
 @app.post("/queue")
 async def add_to_queue(data: dict):
     user_id = data.get("user_id")
@@ -31,26 +34,9 @@ async def add_to_queue(data: dict):
     return {"status": "queued", "user_id": user_id}
 
 @app.post("/notify")
-async def notify(request: Request):
+async def notify(request_data: UserRequest):
     try:
-        token = request.cookies.get("access_token")
-        if not token:
-            raise HTTPException(status_code=401, detail="Missing access_token")
-
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{AUTH_SERVICE_URL}/extract_user_id",
-                json={"token": token}
-            )
-
-        if response.status_code != 200:
-            raise HTTPException(status_code=401, detail="Invalid token")
-
-        user_id = response.json().get("user_id")
-        if not user_id:
-            raise HTTPException(status_code=401, detail="No user_id extracted")
-
-        if str(user_id) not in queued_user_ids:
+        if request_data.user_id not in queued_user_ids:
             return {"send": "no"}
 
         queued_user_ids.remove(str(user_id))
