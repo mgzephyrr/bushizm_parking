@@ -1,7 +1,8 @@
-from fastapi import FastAPI, Response, Request
+from fastapi import Body, FastAPI, HTTPException, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from auth import authenticate_user_by_phone, get_user_id_from_cookie, logout_user
+from utils import verify_token
 
 app = FastAPI()
 
@@ -23,6 +24,14 @@ async def login(data: AuthRequest, response: Response):
 @app.post("/logout")
 def logout(response: Response):
     return logout_user(response)
+
+@app.post("/extract_user_id")
+def extract_user_id(token: str = Body(..., embed=True)):
+    user_id = verify_token(token)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return {"user_id": user_id}
+
 
 @app.get("/me")
 def get_current_user(request: Request):
