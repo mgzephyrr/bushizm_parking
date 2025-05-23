@@ -36,6 +36,7 @@ func NewAPIServer(queue api.Queue) *APIServer {
 
 	routes.RegisterSubsRoutes(apiVersion, api.queue)
 	routes.RegisterCarEventsRoutes(apiVersion, api.queue)
+	routes.RegisterParkingZonesRoutes(apiVersion)
 	return api
 }
 

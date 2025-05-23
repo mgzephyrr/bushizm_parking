@@ -44,13 +44,7 @@ func HandleCarEvent(queue api.Queue) func(c *fiber.Ctx) error {
 
 func handleCarIn(queue api.Queue, carEvent *CarEvent, now time.Time) error {
 	slog.Info("Processing Car In...")
-	err := queue.RemoveFromNotificationQueue(now)
-	if err != nil {
-		return fiber.NewError(
-			fiber.StatusInternalServerError,
-			"Internal error while removing entry from notification queue: "+err.Error(),
-		)
-	}
+	queue.NotifiedQueuePopBack()
 
 	return nil
 }

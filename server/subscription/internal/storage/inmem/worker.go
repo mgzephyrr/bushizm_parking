@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const TIMEOUT time.Duration = time.Second
+const TIMEOUT time.Duration = 2 * time.Second
 
 type QueueWorker struct {
 	WorkerID int
@@ -30,8 +30,12 @@ func (w *QueueWorker) Process(ctx context.Context) {
 		case <-w.ticker.C:
 			for {
 				sub, ok := w.storage.NotifiedQueuePeekBack()
-
-				if !ok || sub.ExpiresAt.Before(now) {
+				if !ok {
+					break
+				}
+				if sub.ExpiresAt.Before(now) {
+					w.storage.NotifiedQueuePopBack()
+					w.storage.MoveToNotificationQueue(now)
 					break
 				}
 
@@ -50,6 +54,7 @@ func (w *QueueWorker) Process(ctx context.Context) {
 			}
 		case <-ctx.Done():
 			w.Shutdown()
+			return
 		}
 	}
 }

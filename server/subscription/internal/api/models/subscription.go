@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"log/slog"
 	"time"
 )
@@ -28,5 +29,5 @@ func NewSubscription(id int, now time.Time) Subscription {
 
 func (sub *Subscription) Notify() error {
 	slog.Info("User notified", slog.Int("USER_ID", sub.UserID))
-	return nil
+	return fmt.Errorf("Mock")
 }

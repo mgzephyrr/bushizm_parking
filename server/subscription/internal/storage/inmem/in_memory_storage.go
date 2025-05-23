@@ -58,14 +58,6 @@ func (s *InMemStorage) MoveToNotificationQueue(now time.Time) error {
 	return nil
 }
 
-func (s *InMemStorage) RemoveFromNotificationQueue(now time.Time) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.notifiedQueue.PopBack()
-	return nil
-}
-
 func (s *InMemStorage) NotifiedQueuePeekBack() (models.Subscription, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
