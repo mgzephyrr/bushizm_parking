@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
-from utils import BOT_TOKEN, AUTH_SERVICE_URL
+from utils import BOT_TOKEN, AUTH_SERVICE_URL, verify_token
 
 app = FastAPI()
 
@@ -32,16 +32,13 @@ async def add_to_queue(data: dict):
 @app.post("/notify")
 async def notify(request: Request):
     try:
-        async with httpx.AsyncClient() as client:
-            auth_response = await client.get(AUTH_SERVICE_URL, cookies=request.cookies)
-            if auth_response.status_code != 200:
-                raise HTTPException(status_code=401, detail="Unauthorized")
+        token = request.cookies.get("access_token")
+        if not token:
+            raise HTTPException(status_code=401, detail="Missing access_token")
 
-            data = auth_response.json()
-            user_id = data.get("user_id")
-
+        user_id = verify_token(token)
         if not user_id:
-            raise HTTPException(status_code=400, detail="No user_id in auth response")
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
 
         if str(user_id) not in queued_user_ids:
             return {"send": "no"}
