@@ -11,7 +11,13 @@ export const subscriptionsApi = createApi({
                 method: 'POST',
             })
         }),
+        getSpotsNumber: build.query<{ spots_number: number }, null>({
+            query: () => ({
+                url: '/spotsnumber',
+                method: 'POST',
+            })
+        }),
     }),
 })
 
-export const {useLazyGetSubscribeQuery} = subscriptionsApi
+export const {useLazyGetSubscribeQuery, useGetSpotsNumberQuery} = subscriptionsApi

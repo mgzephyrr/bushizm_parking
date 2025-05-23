@@ -66,9 +66,25 @@
     padding: 8px 12px 8px 8px;
     border-radius: 4px;
     background-color: #212121;
-    fill: white;
+
+    svg {
+        width: 30px;
+        height: 30px;
+        background-color: #212121;
+        color: white;
+    }
 
     &:hover {
+        svg {
+            background-color: #00C0C9;
+        }
+
         background-color: #00C0C9;
     }
+}
+
+.buttonSection {
+    display: flex;
+    justify-content: center;
+    align-items: center
 }

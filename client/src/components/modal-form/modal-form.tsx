@@ -18,8 +18,7 @@ export default function ModalForm({isOpen, handleClose, trigger}: IModalFormProp
 
     const handleFormSubmit = () => {
         trigger({phone: phone.substring(1, 12)}).then((result: { data: ILoginResponse }) => {
-            console.log(result.data.full_name)
-            dispatch(login(result?.data.full_name))
+            dispatch(login(result?.data?.full_name))
         }).then(() => handleClose())
     }
     return (

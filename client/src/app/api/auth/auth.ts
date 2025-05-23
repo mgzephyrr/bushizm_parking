@@ -4,7 +4,7 @@ import type {ILoginRequest, ILoginResponse} from "./types.ts";
 
 export const authApi = createApi({
     reducerPath: 'authApi',
-    baseQuery: fetchBaseQuery({baseUrl: 'http://localhost:8000', credentials: "include",}),
+    baseQuery: fetchBaseQuery({baseUrl: 'http://localhost:8000/', credentials: "include",}),
     endpoints: (build) => ({
         getLogin: build.mutation<ILoginResponse, ILoginRequest>({
             query: (credentials) => ({
