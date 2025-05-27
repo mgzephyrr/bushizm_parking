@@ -1,54 +1,122 @@
-# React + TypeScript + Vite
+## Установка зависимостей
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### Установка Docker и Make
 
-Currently, two official plugins are available:
+#### macOS
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1. **Установка Docker Desktop**:
+   - Перейдите на [официальный сайт Docker](https://www.docker.com/products/docker-desktop) и скачайте установщик Docker Desktop для macOS.
+   - Откройте скачанный файл `.dmg` и перетащите иконку Docker в папку "Программы".
+   - Откройте Docker из папки "Программы" и дождитесь, пока он полностью загрузится.
 
-## Expanding the ESLint configuration
+2. **Установка Make**:
+   - Откройте терминал и выполните следующую команду для установки Homebrew (если еще не установлен):
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+   - Установите Make:
+
+   ```bash
+   brew install make
+   ```
+
+#### Linux
+
+1. **Установка Docker**:
+   - Откройте терминал и выполните следующие команды:
+
+   ```bash
+   sudo apt-get update
+   sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+   sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+   sudo apt-get update
+   sudo apt-get install -y docker-ce
+   ```
+
+2. **Проверьте установку**:
+   - Убедитесь, что Docker установлен, выполнив команду:
+
+   ```bash
+   docker --version
+   ```
+
+3. **Установка Make**:
+   - Выполните следующую команду:
+
+   ```bash
+   sudo apt-get install -y make
+   ```
+
+#### Windows
+
+Рекомендуется делать действия для Linux через [WSL](https://learn.microsoft.com/ru-ru/windows/wsl/install). Альтернатива представлена ниже
+
+1. **Установка Docker Desktop**:
+   - Перейдите на [официальный сайт Docker](https://www.docker.com/products/docker-desktop) и скачайте установщик Docker Desktop для Windows.
+   - Запустите скачанный установщик и следуйте инструкциям на экране.
+   - После установки запустите Docker Desktop и дождитесь, пока он полностью загрузится.
+
+2. **Установка Make**:
+   - Откройте PowerShell от имени администратора и выполните следующую команду для установки Chocolatey (если еще не установлен):
+
+   ```powershell
+   Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+   ```
+
+   или https://chocolatey.org/install
+
+   - Установите Make:
+
+   ```powershell
+   choco install make
+   ```
+
+### Проверка установки
+
+После установки Docker и Make, вы можете проверить их работоспособность, выполнив следующие команды в терминале или командной строке:
+
+```bash
+docker --version
+make --version
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Если обе команды возвращают версии, значит, установка прошла успешно!
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Управление Docker-контейнером
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+Для управления Docker-контейнером приложения доступны следующие команды:
+
+### Основные команды
+
+- `make initial-start` - Полная перезапуск приложения (очистка + сборка + запуск)
+- `make build` - Собрать Docker-образ приложения
+- `make run` - Запустить контейнер с приложением
+- `make stop` - Остановить контейнер
+- `make clean` - Остановить и удалить контейнер
+- `make clean-image` - Удалить Docker-образ
+- `make clean-all` - Полная очистка (удаление контейнера и образа)
+
+### Пример использования
+
+1. Первый запуск приложения:
+   ```bash
+   make initial-start
+   ```
+
+2. Остановка приложения:
+   ```bash
+   make stop
+   ```
+
+3. Удаление контейнера:
+   ```bash
+   make clean
+   ```
+
+4. Полная очистка:
+   ```bash
+   make clean-all
+   ```
