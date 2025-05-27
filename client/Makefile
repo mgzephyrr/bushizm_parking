@@ -1,6 +1,6 @@
-IMAGE_NAME = avito-frontend
+IMAGE_NAME = parking_client
 
-CONTAINER_NAME = avito-frontend-container
+CONTAINER_NAME = parking_client
 
 PORT = 5173
 
