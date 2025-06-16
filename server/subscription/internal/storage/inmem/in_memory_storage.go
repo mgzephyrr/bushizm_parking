@@ -2,6 +2,7 @@ package inmem
 
 import (
 	"context"
+	"subscription/internal/api"
 	"subscription/internal/api/models"
 	"sync"
 	"time"
@@ -15,16 +16,20 @@ type InMemStorage struct {
 	wantToPark    *deque.Deque[int]
 	notifiedQueue *deque.Deque[models.Subscription]
 	mu            sync.Mutex
+	maxQueueSize  int
+	inQueue       map[int]struct{}
 }
 
-func NewInMemStorage(ctx context.Context) *InMemStorage {
+func NewInMemStorage(ctx context.Context, maxSize int) *InMemStorage {
 	storage := &InMemStorage{
-		wantToPark:    deque.New[int](10),
-		notifiedQueue: deque.New[models.Subscription](10),
+		wantToPark:    deque.New[int](maxSize),
+		notifiedQueue: deque.New[models.Subscription](maxSize),
+		maxQueueSize:  maxSize,
+		inQueue:       make(map[int]struct{}),
 	}
 
 	for i := range WORKERS_COUNT {
-		go NewQueueWorker(i + 1, storage).Process(ctx)
+		go NewQueueWorker(i+1, storage).Process(ctx)
 	}
 
 	return storage
@@ -41,7 +46,16 @@ func (s *InMemStorage) AddSubToEnd(id int) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if s.wantToPark.Len() >= s.maxQueueSize {
+		return api.ErrQueueFull
+	}
+
+	if _, exists := s.inQueue[id]; exists {
+		return api.ErrAlreadyInQueue
+	}
+
 	s.wantToPark.PushFront(id)
+	s.inQueue[id] = struct{}{}
 	return nil
 }
 
@@ -54,6 +68,7 @@ func (s *InMemStorage) MoveToNotificationQueue(now time.Time) error {
 		return nil
 	}
 
+	delete(s.inQueue, userID)
 	s.notifiedQueue.PushFront(models.NewSubscription(userID, now))
 	return nil
 }

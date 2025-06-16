@@ -15,6 +15,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const QUEUE_SIZE = 10
+
 func main() {
 	if err := godotenv.Load("../.env"); err != nil {
 		log.Fatal("Error loading .env file", err.Error())
@@ -23,7 +25,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	queue := inmem.NewInMemStorage(ctx)
+	queue := inmem.NewInMemStorage(ctx, QUEUE_SIZE)
 
 	server := server.NewAPIServer(queue)
 	serverErr := make(chan error, 1)

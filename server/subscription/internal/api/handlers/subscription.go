@@ -51,7 +51,14 @@ func CreateSubscription(queue api.Queue) func(c *fiber.Ctx) error {
 
 		err = queue.AddSubToEnd(userID)
 		if err != nil {
-			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+			switch err {
+			case api.ErrQueueFull:
+				return fiber.NewError(fiber.StatusConflict, "Queue is full")
+			case api.ErrAlreadyInQueue:
+				return fiber.NewError(fiber.StatusBadRequest, "User is already in queue")
+			default:
+				return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+			}
 		}
 
 		slog.Info(fmt.Sprintf("%v", queue.GetAllQueue()))
