@@ -4,8 +4,6 @@ import (
 	"errors"
 	"subscription/internal/api/models"
 	"time"
-
-	"github.com/idsulik/go-collections/deque"
 )
 
 var (
@@ -14,9 +12,10 @@ var (
 )
 
 type Queue interface {
-	GetAllQueue() *deque.Deque[int]
+	GetAllQueue() []int
 	AddSubToEnd(int) error
 	MoveToNotificationQueue(time.Time) error
+	GetUserPosition(int) (int, error)
 
 	NotifiedQueuePeekBack() (models.Subscription, bool)
 	NotifiedQueuePopBack() (models.Subscription, bool)

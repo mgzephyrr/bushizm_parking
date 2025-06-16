@@ -2,19 +2,20 @@ package inmem
 
 import (
 	"context"
+	"fmt"
 	"subscription/internal/api"
 	"subscription/internal/api/models"
 	"sync"
 	"time"
 
-	"github.com/idsulik/go-collections/deque"
+	"github.com/gammazero/deque"
 )
 
 const WORKERS_COUNT = 1
 
 type InMemStorage struct {
-	wantToPark    *deque.Deque[int]
-	notifiedQueue *deque.Deque[models.Subscription]
+	wantToPark    deque.Deque[int]
+	notifiedQueue deque.Deque[models.Subscription]
 	mu            sync.Mutex
 	maxQueueSize  int
 	inQueue       map[int]struct{}
@@ -22,8 +23,8 @@ type InMemStorage struct {
 
 func NewInMemStorage(ctx context.Context, maxSize int) *InMemStorage {
 	storage := &InMemStorage{
-		wantToPark:    deque.New[int](maxSize),
-		notifiedQueue: deque.New[models.Subscription](maxSize),
+		wantToPark:    deque.Deque[int]{},
+		notifiedQueue: deque.Deque[models.Subscription]{},
 		maxQueueSize:  maxSize,
 		inQueue:       make(map[int]struct{}),
 	}
@@ -35,11 +36,15 @@ func NewInMemStorage(ctx context.Context, maxSize int) *InMemStorage {
 	return storage
 }
 
-func (s *InMemStorage) GetAllQueue() *deque.Deque[int] {
+func (s *InMemStorage) GetAllQueue() []int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return s.wantToPark
+	result := make([]int, s.wantToPark.Len())
+	for i := 0; i < s.wantToPark.Len(); i++ {
+		result[i] = s.wantToPark.At(i)
+	}
+	return result
 }
 
 func (s *InMemStorage) AddSubToEnd(id int) error {
@@ -54,7 +59,7 @@ func (s *InMemStorage) AddSubToEnd(id int) error {
 		return api.ErrAlreadyInQueue
 	}
 
-	s.wantToPark.PushFront(id)
+	s.wantToPark.PushBack(id)
 	s.inQueue[id] = struct{}{}
 	return nil
 }
@@ -63,13 +68,13 @@ func (s *InMemStorage) MoveToNotificationQueue(now time.Time) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	userID, ok := s.wantToPark.PopBack()
-	if !ok {
+	if s.wantToPark.Len() == 0 {
 		return nil
 	}
 
+	userID := s.wantToPark.PopFront()
 	delete(s.inQueue, userID)
-	s.notifiedQueue.PushFront(models.NewSubscription(userID, now))
+	s.notifiedQueue.PushBack(models.NewSubscription(userID, now))
 	return nil
 }
 
@@ -77,12 +82,30 @@ func (s *InMemStorage) NotifiedQueuePeekBack() (models.Subscription, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return s.notifiedQueue.PeekBack()
+	if s.notifiedQueue.Len() == 0 {
+		return models.Subscription{}, false
+	}
+	return s.notifiedQueue.Back(), true
 }
 
 func (s *InMemStorage) NotifiedQueuePopBack() (models.Subscription, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return s.notifiedQueue.PopBack()
+	if s.notifiedQueue.Len() == 0 {
+		return models.Subscription{}, false
+	}
+	return s.notifiedQueue.PopBack(), true
+}
+
+func (s *InMemStorage) GetUserPosition(userID int) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for i := 0; i < s.wantToPark.Len(); i++ {
+		if s.wantToPark.At(i) == userID {
+			return i + 1, nil
+		}
+	}
+	return -1, fmt.Errorf("user not in queue")
 }

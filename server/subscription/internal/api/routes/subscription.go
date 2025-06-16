@@ -11,4 +11,5 @@ func RegisterSubsRoutes(router fiber.Router, queue api.Queue) {
 	group := router.Group("/subscriptions")
 
 	group.Post("/subscribe", handlers.CreateSubscription(queue))
+	group.Get("/position", handlers.GetUserQueuePosition(queue))
 }

@@ -66,6 +66,29 @@ func CreateSubscription(queue api.Queue) func(c *fiber.Ctx) error {
 	}
 }
 
+func GetUserQueuePosition(queue api.Queue) func(c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		authCookie := c.Cookies(AUTH_COOKIE)
+		if authCookie == "" {
+			return fiber.NewError(fiber.StatusUnauthorized)
+		}
+
+		userID, err := GetUserID(authCookie)
+		if err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+
+		position, err := queue.GetUserPosition(userID)
+		if err != nil {
+			return fiber.NewError(fiber.StatusNotFound, "User not in queue")
+		}
+
+		return c.JSON(fiber.Map{
+			"position": position,
+		})
+	}
+}
+
 type userIDResponse struct {
 	UserID string `json:"user_id"`
 }

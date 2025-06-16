@@ -4,12 +4,12 @@ go 1.23.5
 
 require (
 	github.com/gofiber/fiber/v2 v2.52.8
-	github.com/idsulik/go-collections v1.2.3
 	github.com/joho/godotenv v1.5.1
 )
 
 require (
 	github.com/andybalholm/brotli v1.1.1 // indirect
+	github.com/gammazero/deque v1.0.0
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
