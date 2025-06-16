@@ -14,11 +14,12 @@ import (
 const WORKERS_COUNT = 1
 
 type InMemStorage struct {
-	wantToPark    deque.Deque[int]
-	notifiedQueue deque.Deque[models.Subscription]
-	mu            sync.Mutex
-	maxQueueSize  int
-	inQueue       map[int]struct{}
+	wantToPark       deque.Deque[int]
+	notifiedQueue    deque.Deque[models.Subscription]
+	mu               sync.Mutex
+	maxQueueSize     int
+	inQueue          map[int]struct{}
+	lastDequeueTimes []time.Time
 }
 
 func NewInMemStorage(ctx context.Context, maxSize int) *InMemStorage {
@@ -75,7 +76,31 @@ func (s *InMemStorage) MoveToNotificationQueue(now time.Time) error {
 	userID := s.wantToPark.PopFront()
 	delete(s.inQueue, userID)
 	s.notifiedQueue.PushBack(models.NewSubscription(userID, now))
+
+	s.lastDequeueTimes = append(s.lastDequeueTimes, now)
+	if len(s.lastDequeueTimes) > s.maxQueueSize {
+		s.lastDequeueTimes = s.lastDequeueTimes[1:] // храним последние 10
+	}
+
 	return nil
+}
+
+func (s *InMemStorage) EstimateWaitTime(position int) time.Duration {
+    s.mu.Lock()
+    defer s.mu.Unlock()
+
+    times := s.lastDequeueTimes
+    if len(times) < 2 {
+        return 0
+    }
+
+    var total time.Duration
+    for i := 1; i < len(times); i++ {
+        total += times[i].Sub(times[i-1])
+    }
+
+    avgInterval := total / time.Duration(len(times)-1)
+    return avgInterval * time.Duration(position-1)
 }
 
 func (s *InMemStorage) NotifiedQueuePeekBack() (models.Subscription, bool) {

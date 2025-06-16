@@ -66,27 +66,31 @@ func CreateSubscription(queue api.Queue) func(c *fiber.Ctx) error {
 	}
 }
 
-func GetUserQueuePosition(queue api.Queue) func(c *fiber.Ctx) error {
-	return func(c *fiber.Ctx) error {
-		authCookie := c.Cookies(AUTH_COOKIE)
-		if authCookie == "" {
-			return fiber.NewError(fiber.StatusUnauthorized)
-		}
+func GetUserQueuePosition(queue api.Queue) fiber.Handler {
+    return func(c *fiber.Ctx) error {
+        authCookie := c.Cookies(AUTH_COOKIE)
+        if authCookie == "" {
+            return fiber.NewError(fiber.StatusUnauthorized)
+        }
 
-		userID, err := GetUserID(authCookie)
-		if err != nil {
-			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
-		}
+        userID, err := GetUserID(authCookie)
+        if err != nil {
+            return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+        }
 
-		position, err := queue.GetUserPosition(userID)
-		if err != nil {
-			return fiber.NewError(fiber.StatusNotFound, "User not in queue")
-		}
+        pos, err := queue.GetUserPosition(userID)
+        if err != nil {
+            return fiber.NewError(fiber.StatusNotFound, "User not in queue")
+        }
 
-		return c.JSON(fiber.Map{
-			"position": position,
-		})
-	}
+        wait := queue.EstimateWaitTime(pos)
+
+        return c.JSON(fiber.Map{
+            "position":            pos,
+            "estimated_wait_sec":  int(wait.Seconds()),
+            "estimated_wait_human": wait.Round(time.Minute).String(),
+        })
+    }
 }
 
 type userIDResponse struct {

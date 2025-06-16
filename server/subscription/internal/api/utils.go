@@ -19,4 +19,5 @@ type Queue interface {
 
 	NotifiedQueuePeekBack() (models.Subscription, bool)
 	NotifiedQueuePopBack() (models.Subscription, bool)
+	EstimateWaitTime(int) time.Duration
 }
