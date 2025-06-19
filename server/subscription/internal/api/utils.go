@@ -21,3 +21,7 @@ type Queue interface {
 	NotifiedQueuePopBack() (models.Subscription, bool)
 	EstimateWaitTime(int) time.Duration
 }
+
+type Parking interface {
+	CheckAvailableSpots() (int, error)
+}

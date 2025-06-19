@@ -14,29 +14,16 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-const AUTH_COOKIE = "access_token"
+const authCookie = "access_token"
 
-type ZoneInfo struct {
-	Data    ZoneInfoData `json:"data"`
-	Code    int          `json:"code"`
-	Message string       `json:"message"`
-}
-
-type ZoneInfoData struct {
-	ParkingZoneID  string `json:"parking_zone_id"`
-	Name           string `json:"name"`
-	AvailableSpots int    `json:"available_spots"`
-	Comment        string `json:"comment"`
-}
-
-func CreateSubscription(queue api.Queue) func(c *fiber.Ctx) error {
+func CreateSubscription(queue api.Queue, parking api.Parking) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		authCookie := c.Cookies(AUTH_COOKIE)
+		authCookie := c.Cookies(authCookie)
 		if authCookie == "" {
 			return fiber.NewError(fiber.StatusUnauthorized)
 		}
 
-		spotsNumber, err := CheckAvailableSpots()
+		spotsNumber, err := parking.CheckAvailableSpots()
 		if err != nil {
 			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 		}
@@ -67,30 +54,30 @@ func CreateSubscription(queue api.Queue) func(c *fiber.Ctx) error {
 }
 
 func GetUserQueuePosition(queue api.Queue) fiber.Handler {
-    return func(c *fiber.Ctx) error {
-        authCookie := c.Cookies(AUTH_COOKIE)
-        if authCookie == "" {
-            return fiber.NewError(fiber.StatusUnauthorized)
-        }
+	return func(c *fiber.Ctx) error {
+		authCookie := c.Cookies(authCookie)
+		if authCookie == "" {
+			return fiber.NewError(fiber.StatusUnauthorized)
+		}
 
-        userID, err := GetUserID(authCookie)
-        if err != nil {
-            return fiber.NewError(fiber.StatusInternalServerError, err.Error())
-        }
+		userID, err := GetUserID(authCookie)
+		if err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
 
-        pos, err := queue.GetUserPosition(userID)
-        if err != nil {
-            return fiber.NewError(fiber.StatusNotFound, "User not in queue")
-        }
+		pos, err := queue.GetUserPosition(userID)
+		if err != nil {
+			return fiber.NewError(fiber.StatusNotFound, "User not in queue")
+		}
 
-        wait := queue.EstimateWaitTime(pos)
+		wait := queue.EstimateWaitTime(pos)
 
-        return c.JSON(fiber.Map{
-            "position":            pos,
-            "estimated_wait_sec":  int(wait.Seconds()),
-            "estimated_wait_human": wait.Round(time.Minute).String(),
-        })
-    }
+		return c.JSON(fiber.Map{
+			"position":             pos,
+			"estimated_wait_sec":   int(wait.Seconds()),
+			"estimated_wait_human": wait.Round(time.Minute).String(),
+		})
+	}
 }
 
 type userIDResponse struct {

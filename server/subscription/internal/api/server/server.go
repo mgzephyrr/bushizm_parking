@@ -12,14 +12,16 @@ import (
 )
 
 type APIServer struct {
-	server *fiber.App
-	queue  api.Queue
+	server  *fiber.App
+	queue   api.Queue
+	parking api.Parking
 }
 
-func NewAPIServer(queue api.Queue) *APIServer {
+func NewAPIServer(queue api.Queue, parking api.Parking) *APIServer {
 	api := &APIServer{
-		server: fiber.New(),
-		queue:  queue,
+		server:  fiber.New(),
+		queue:   queue,
+		parking: parking,
 	}
 
 	api.server.Use(cors.New(cors.Config{
@@ -35,9 +37,9 @@ func NewAPIServer(queue api.Queue) *APIServer {
 
 	apiVersion := api.server.Group("/api/v1")
 
-	routes.RegisterSubsRoutes(apiVersion, api.queue)
+	routes.RegisterSubsRoutes(apiVersion, api.queue, api.parking)
 	routes.RegisterCarEventsRoutes(apiVersion, api.queue)
-	routes.RegisterParkingZonesRoutes(apiVersion)
+	routes.RegisterParkingZonesRoutes(apiVersion, api.parking)
 	return api
 }
 

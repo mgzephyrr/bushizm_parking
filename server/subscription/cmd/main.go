@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"subscription/internal/api/server"
+	"subscription/internal/parkingapi"
 	"subscription/internal/storage/inmem"
 	"syscall"
 	"time"
@@ -26,8 +27,9 @@ func main() {
 	defer cancel()
 
 	queue := inmem.NewInMemStorage(ctx, QUEUE_SIZE)
+	parking := parkingapi.NewParkingAPI()
 
-	server := server.NewAPIServer(queue)
+	server := server.NewAPIServer(queue, parking)
 	serverErr := make(chan error, 1)
 
 	go func() {
