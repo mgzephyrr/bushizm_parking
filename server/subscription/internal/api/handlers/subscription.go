@@ -16,7 +16,7 @@ import (
 
 const authCookie = "access_token"
 
-func CreateSubscription(queue api.Queue, parking api.ParkingService) func(c *fiber.Ctx) error {
+func CreateSubscription(ctx context.Context, queue api.Queue, parking api.ParkingService) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		authCookie := c.Cookies(authCookie)
 		if authCookie == "" {
@@ -36,7 +36,7 @@ func CreateSubscription(queue api.Queue, parking api.ParkingService) func(c *fib
 			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 		}
 
-		err = queue.AddSubToEnd(userID)
+		err = queue.AddSubToEnd(ctx, userID)
 		if err != nil {
 			switch err {
 			case api.ErrQueueFull:
@@ -48,12 +48,17 @@ func CreateSubscription(queue api.Queue, parking api.ParkingService) func(c *fib
 			}
 		}
 
-		slog.Info(fmt.Sprintf("%v", queue.GetAllQueue()))
+		queue, err := queue.GetAllQueue(ctx)
+		if err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+
+		slog.Info(fmt.Sprintf("%v", queue))
 		return c.Status(fiber.StatusOK).SendString("Added to queue")
 	}
 }
 
-func GetUserQueuePosition(queue api.Queue) fiber.Handler {
+func GetUserQueuePosition(ctx context.Context, queue api.Queue) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		authCookie := c.Cookies(authCookie)
 		if authCookie == "" {
@@ -65,7 +70,7 @@ func GetUserQueuePosition(queue api.Queue) fiber.Handler {
 			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 		}
 
-		pos, err := queue.GetUserPosition(userID)
+		pos, err := queue.GetUserPosition(ctx, userID)
 		if err != nil {
 			return fiber.NewError(fiber.StatusNotFound, "User not in queue")
 		}

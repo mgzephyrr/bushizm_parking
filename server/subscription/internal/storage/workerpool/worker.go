@@ -32,14 +32,14 @@ func (w *QueueWorker) Process(ctx context.Context) {
 		select {
 		case <-w.ticker.C:
 			for {
-				sub, ok := w.storage.NotifiedQueuePeekBack()
+				sub, ok := w.storage.NotifiedQueuePeekBack(ctx)
 				if !ok {
 					break
 				}
 
 				if sub.ExpiresAt.Before(now) {
-					w.storage.NotifiedQueuePopBack()
-					w.storage.MoveToNotificationQueue(now)
+					w.storage.NotifiedQueuePopBack(ctx)
+					w.storage.MoveToNotificationQueue(ctx, now)
 					break
 				}
 
@@ -47,14 +47,14 @@ func (w *QueueWorker) Process(ctx context.Context) {
 				if err != nil {
 					if err.Error() == "max notification attempts reached" {
 						slog.Info("Max notify attempts reached, removing subscription", slog.Int("userID", sub.UserID))
-						w.storage.NotifiedQueuePopBack()
+						w.storage.NotifiedQueuePopBack(ctx)
 					} else {
 						slog.Error("Error while notifying", slog.String("error", err.Error()))
 					}
 					break
 				}
 
-				w.storage.NotifiedQueuePopBack()
+				w.storage.NotifiedQueuePopBack(ctx)
 			}
 		case <-ctx.Done():
 			w.Shutdown()

@@ -12,15 +12,17 @@ const (
 )
 
 type Subscription struct {
+	ID             int       `json:"id"`
 	UserID         int       `json:"user_id"`
 	CreatedAt      time.Time `json:"created_at"`
 	ExpiresAt      time.Time `json:"expires_at"`
 	NotifyAttempts int       `json:"notify_attempts"`
 }
 
-func NewSubscription(id int, now time.Time) Subscription {
+func NewSubscription(id int, userID int, now time.Time) Subscription {
 	return Subscription{
-		UserID:    id,
+		ID:        id,
+		UserID:    userID,
 		CreatedAt: now,
 		ExpiresAt: now.Add(EXPIRATION_TIME),
 	}

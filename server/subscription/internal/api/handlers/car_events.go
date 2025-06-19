@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"log/slog"
 	"subscription/internal/api"
 	"subscription/internal/models"
@@ -24,7 +25,7 @@ type CarEventData struct {
 	RecognitionConfidence float32          `json:"recognition_confidence"`
 }
 
-func HandleCarEvent(queue api.Queue) func(c *fiber.Ctx) error {
+func HandleCarEvent(ctx context.Context, queue api.Queue) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		carEvent := new(CarEvent)
 
@@ -35,23 +36,23 @@ func HandleCarEvent(queue api.Queue) func(c *fiber.Ctx) error {
 		}
 
 		if carEvent.Data.Direction == models.DirectionIn {
-			return handleCarIn(queue, carEvent, now)
+			return handleCarIn(ctx, queue, carEvent, now)
 		}
 
-		return handleCarOut(queue, carEvent, now)
+		return handleCarOut(ctx, queue, carEvent, now)
 	}
 }
 
-func handleCarIn(queue api.Queue, carEvent *CarEvent, now time.Time) error {
+func handleCarIn(ctx context.Context, queue api.Queue, carEvent *CarEvent, now time.Time) error {
 	slog.Info("Processing Car In...")
-	queue.NotifiedQueuePopBack()
+	queue.NotifiedQueuePopBack(ctx)
 
 	return nil
 }
 
-func handleCarOut(queue api.Queue, carEvent *CarEvent, now time.Time) error {
+func handleCarOut(ctx context.Context, queue api.Queue, carEvent *CarEvent, now time.Time) error {
 	slog.Info("Processing Car Out...")
-	err := queue.MoveToNotificationQueue(now)
+	err := queue.MoveToNotificationQueue(ctx, now)
 	if err != nil {
 		return fiber.NewError(
 			fiber.StatusInternalServerError,

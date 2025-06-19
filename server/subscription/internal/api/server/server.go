@@ -17,7 +17,7 @@ type APIServer struct {
 	parkingService      api.ParkingService
 }
 
-func NewAPIServer(queue api.Queue, parking api.ParkingService) *APIServer {
+func NewAPIServer(ctx context.Context, queue api.Queue, parking api.ParkingService) *APIServer {
 	api := &APIServer{
 		server:              fiber.New(),
 		queue:               queue,
@@ -37,8 +37,8 @@ func NewAPIServer(queue api.Queue, parking api.ParkingService) *APIServer {
 
 	apiVersion := api.server.Group("/api/v1")
 
-	routes.RegisterSubsRoutes(apiVersion, api.queue, api.parkingService)
-	routes.RegisterCarEventsRoutes(apiVersion, api.queue)
+	routes.RegisterSubsRoutes(ctx, apiVersion, api.queue, api.parkingService)
+	routes.RegisterCarEventsRoutes(ctx, apiVersion, api.queue)
 	routes.RegisterParkingZonesRoutes(apiVersion, api.parkingService)
 	return api
 }

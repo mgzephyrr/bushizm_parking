@@ -69,7 +69,7 @@ func (s *InMemStorage) MoveToNotificationQueue(now time.Time) error {
 
 	userID := s.wantToPark.PopFront()
 	delete(s.inQueue, userID)
-	s.notifiedQueue.PushBack(models.NewSubscription(userID, now))
+	s.notifiedQueue.PushBack(models.NewSubscription(0, userID, now))
 
 	s.lastDequeueTimes = append(s.lastDequeueTimes, now)
 	if len(s.lastDequeueTimes) > s.maxQueueSize {

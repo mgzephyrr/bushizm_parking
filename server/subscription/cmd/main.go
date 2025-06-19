@@ -10,7 +10,7 @@ import (
 	"subscription/internal/api/server"
 	"subscription/internal/notificationapi"
 	"subscription/internal/parkingapi"
-	"subscription/internal/storage/inmem"
+	"subscription/internal/storage/pgstorage"
 	"subscription/internal/storage/workerpool"
 	"syscall"
 	"time"
@@ -31,15 +31,21 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// init services
 	notifService := notificationapi.NewNotificationAPI()
-	queue := inmem.NewInMemStorage(ctx, queueSize)
+	// queue := inmem.NewInMemStorage(ctx, queueSize)
+	queue, _, err := pgstorage.NewPostgresStore("")
+	if err != nil {
+		log.Fatal(err)
+	}
 	parking := parkingapi.NewParkingAPI()
+	server := server.NewAPIServer(ctx, queue, parking)
 
+	// init workers
 	for i := range workersCount {
 		go workerpool.NewQueueWorker(i+1, queue, notifService).Process(ctx)
 	}
 
-	server := server.NewAPIServer(queue, parking)
 	serverErr := make(chan error, 1)
 
 	go func() {
