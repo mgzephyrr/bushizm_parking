@@ -1,25 +1,28 @@
-package inmem
+package workerpool
 
 import (
 	"context"
 	"fmt"
 	"log/slog"
+	"subscription/internal/api"
 	"time"
 )
 
 const TIMEOUT time.Duration = 2 * time.Second
 
 type QueueWorker struct {
-	WorkerID int
-	ticker   *time.Ticker
-	storage  *InMemStorage
+	WorkerID            int
+	ticker              *time.Ticker
+	storage             api.Queue
+	notificationService api.NotificationService
 }
 
-func NewQueueWorker(workerID int, storage *InMemStorage) *QueueWorker {
+func NewQueueWorker(workerID int, storage api.Queue, notif api.NotificationService) *QueueWorker {
 	return &QueueWorker{
-		WorkerID: workerID,
-		ticker:   time.NewTicker(TIMEOUT),
-		storage:  storage,
+		WorkerID:            workerID,
+		ticker:              time.NewTicker(TIMEOUT),
+		storage:             storage,
+		notificationService: notif,
 	}
 }
 
@@ -40,7 +43,7 @@ func (w *QueueWorker) Process(ctx context.Context) {
 					break
 				}
 
-				err := sub.Notify()
+				err := w.notificationService.Notify(sub)
 				if err != nil {
 					if err.Error() == "max notification attempts reached" {
 						slog.Info("Max notify attempts reached, removing subscription", slog.Int("userID", sub.UserID))

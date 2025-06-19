@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"subscription/internal/api"
 	"subscription/internal/models"
+	"subscription/internal/storage/workerpool"
 	"sync"
 	"time"
 
@@ -14,24 +15,26 @@ import (
 const WORKERS_COUNT = 1
 
 type InMemStorage struct {
-	wantToPark       deque.Deque[int]
-	notifiedQueue    deque.Deque[models.Subscription]
-	mu               sync.Mutex
-	maxQueueSize     int
-	inQueue          map[int]struct{}
-	lastDequeueTimes []time.Time
+	wantToPark          deque.Deque[int]
+	notifiedQueue       deque.Deque[models.Subscription]
+	mu                  sync.Mutex
+	maxQueueSize        int
+	inQueue             map[int]struct{}
+	lastDequeueTimes    []time.Time
+	notificationService api.NotificationService
 }
 
-func NewInMemStorage(ctx context.Context, maxSize int) *InMemStorage {
+func NewInMemStorage(ctx context.Context, maxSize int, notif api.NotificationService) *InMemStorage {
 	storage := &InMemStorage{
-		wantToPark:    deque.Deque[int]{},
-		notifiedQueue: deque.Deque[models.Subscription]{},
-		maxQueueSize:  maxSize,
-		inQueue:       make(map[int]struct{}),
+		wantToPark:          deque.Deque[int]{},
+		notifiedQueue:       deque.Deque[models.Subscription]{},
+		maxQueueSize:        maxSize,
+		inQueue:             make(map[int]struct{}),
+		notificationService: notif,
 	}
 
 	for i := range WORKERS_COUNT {
-		go NewQueueWorker(i+1, storage).Process(ctx)
+		go workerpool.NewQueueWorker(i+1, storage, notif).Process(ctx)
 	}
 
 	return storage
@@ -86,21 +89,21 @@ func (s *InMemStorage) MoveToNotificationQueue(now time.Time) error {
 }
 
 func (s *InMemStorage) EstimateWaitTime(position int) time.Duration {
-    s.mu.Lock()
-    defer s.mu.Unlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-    times := s.lastDequeueTimes
-    if len(times) < 2 {
-        return 0
-    }
+	times := s.lastDequeueTimes
+	if len(times) < 2 {
+		return 0
+	}
 
-    var total time.Duration
-    for i := 1; i < len(times); i++ {
-        total += times[i].Sub(times[i-1])
-    }
+	var total time.Duration
+	for i := 1; i < len(times); i++ {
+		total += times[i].Sub(times[i-1])
+	}
 
-    avgInterval := total / time.Duration(len(times)-1)
-    return avgInterval * time.Duration(position-1)
+	avgInterval := total / time.Duration(len(times)-1)
+	return avgInterval * time.Duration(position-1)
 }
 
 func (s *InMemStorage) NotifiedQueuePeekBack() (models.Subscription, bool) {

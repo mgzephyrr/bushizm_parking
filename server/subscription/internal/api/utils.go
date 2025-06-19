@@ -27,5 +27,5 @@ type ParkingService interface {
 }
 
 type NotificationService interface {
-
+	Notify(models.Subscription) error
 }

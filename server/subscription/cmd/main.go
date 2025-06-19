@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"subscription/internal/api/server"
+	"subscription/internal/notificationapi"
 	"subscription/internal/parkingapi"
 	"subscription/internal/storage/inmem"
 	"syscall"
@@ -16,7 +17,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const QUEUE_SIZE = 10
+const queueSize = 10
 
 func main() {
 	if err := godotenv.Load("../.env"); err != nil {
@@ -26,7 +27,8 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	queue := inmem.NewInMemStorage(ctx, QUEUE_SIZE)
+	notifService := notificationapi.NewNotificationAPI()
+	queue := inmem.NewInMemStorage(ctx, queueSize, notifService)
 	parking := parkingapi.NewParkingAPI()
 
 	server := server.NewAPIServer(queue, parking)
