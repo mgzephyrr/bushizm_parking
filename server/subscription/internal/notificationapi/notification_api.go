@@ -1,4 +1,4 @@
-package models
+package notificationapi
 
 import (
 	"bytes"
@@ -8,42 +8,26 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"subscription/internal/models"
 	"time"
 )
 
-const (
-	EXPIRATION_TIME   = 15 * time.Minute
-	maxNotifyAttempts = 3
-)
+type NotificationAPI struct{}
 
-type Subscription struct {
-	UserID         int       `json:"user_id"`
-	CreatedAt      time.Time `json:"created_at"`
-	ExpiresAt      time.Time `json:"expires_at"`
-	NotifyAttempts int       `json:"notify_attempts"`
+func NewNotificationAPI() *NotificationAPI {
+	return &NotificationAPI{}
 }
 
-func NewSubscription(id int, now time.Time) Subscription {
-	return Subscription{
-		UserID:    id,
-		CreatedAt: now,
-		ExpiresAt: now.Add(EXPIRATION_TIME),
+func (*NotificationAPI) Notify(sub models.Subscription) error {
+	err := sub.Notify()
+	if err != nil {
+		return fmt.Errorf("error while notificating %w", err)
 	}
-}
-
-func (sub *Subscription) Notify() error {
-	if sub.NotifyAttempts >= maxNotifyAttempts {
-		return fmt.Errorf("max notification attempts reached")
-	}
-
-	sub.NotifyAttempts++
-
-	slog.Info("Notifying user with", slog.Int("ID", sub.UserID))
+	
+	data := map[string]string{"user_id": strconv.Itoa(sub.UserID)}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
-	data := map[string]string{"user_id": strconv.Itoa(sub.UserID)}
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {

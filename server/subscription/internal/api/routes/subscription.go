@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func RegisterSubsRoutes(router fiber.Router, queue api.Queue, parking api.Parking) {
+func RegisterSubsRoutes(router fiber.Router, queue api.Queue, parking api.ParkingService) {
 	group := router.Group("/subscriptions")
 
 	group.Post("/subscribe", handlers.CreateSubscription(queue, parking))

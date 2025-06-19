@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"subscription/internal/api"
-	"subscription/internal/api/models"
+	"subscription/internal/models"
 	"sync"
 	"time"
 

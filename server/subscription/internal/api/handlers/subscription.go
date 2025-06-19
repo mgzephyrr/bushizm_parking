@@ -16,7 +16,7 @@ import (
 
 const authCookie = "access_token"
 
-func CreateSubscription(queue api.Queue, parking api.Parking) func(c *fiber.Ctx) error {
+func CreateSubscription(queue api.Queue, parking api.ParkingService) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		authCookie := c.Cookies(authCookie)
 		if authCookie == "" {

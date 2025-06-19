@@ -7,6 +7,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func RegisterParkingZonesRoutes(router fiber.Router, parking api.Parking) {
+func RegisterParkingZonesRoutes(router fiber.Router, parking api.ParkingService) {
 	router.Get("/spotsnumber", handlers.GetAvailableSpots(parking))
 }

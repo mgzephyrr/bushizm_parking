@@ -2,7 +2,7 @@ package api
 
 import (
 	"errors"
-	"subscription/internal/api/models"
+	"subscription/internal/models"
 	"time"
 )
 
@@ -22,6 +22,10 @@ type Queue interface {
 	EstimateWaitTime(int) time.Duration
 }
 
-type Parking interface {
+type ParkingService interface {
 	CheckAvailableSpots() (int, error)
+}
+
+type NotificationService interface {
+
 }

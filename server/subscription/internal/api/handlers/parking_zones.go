@@ -10,7 +10,7 @@ type SpotsResponse struct {
 	SpotsNumber int `json:"spots_number"`
 }
 
-func GetAvailableSpots(parking api.Parking) func(c *fiber.Ctx) error {
+func GetAvailableSpots(parking api.ParkingService) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		spots, err := parking.CheckAvailableSpots()
 		if err != nil {

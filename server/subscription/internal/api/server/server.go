@@ -14,10 +14,10 @@ import (
 type APIServer struct {
 	server  *fiber.App
 	queue   api.Queue
-	parking api.Parking
+	parking api.ParkingService
 }
 
-func NewAPIServer(queue api.Queue, parking api.Parking) *APIServer {
+func NewAPIServer(queue api.Queue, parking api.ParkingService) *APIServer {
 	api := &APIServer{
 		server:  fiber.New(),
 		queue:   queue,

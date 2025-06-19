@@ -3,7 +3,7 @@ package handlers
 import (
 	"log/slog"
 	"subscription/internal/api"
-	"subscription/internal/api/models"
+	"subscription/internal/models"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
