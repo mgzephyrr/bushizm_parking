@@ -5,36 +5,27 @@ import (
 	"fmt"
 	"subscription/internal/api"
 	"subscription/internal/models"
-	"subscription/internal/storage/workerpool"
 	"sync"
 	"time"
 
 	"github.com/gammazero/deque"
 )
 
-const WORKERS_COUNT = 1
-
 type InMemStorage struct {
-	wantToPark          deque.Deque[int]
-	notifiedQueue       deque.Deque[models.Subscription]
-	mu                  sync.Mutex
-	maxQueueSize        int
-	inQueue             map[int]struct{}
-	lastDequeueTimes    []time.Time
-	notificationService api.NotificationService
+	wantToPark       deque.Deque[int]
+	notifiedQueue    deque.Deque[models.Subscription]
+	mu               sync.Mutex
+	maxQueueSize     int
+	inQueue          map[int]struct{}
+	lastDequeueTimes []time.Time
 }
 
-func NewInMemStorage(ctx context.Context, maxSize int, notif api.NotificationService) *InMemStorage {
+func NewInMemStorage(ctx context.Context, maxSize int) *InMemStorage {
 	storage := &InMemStorage{
-		wantToPark:          deque.Deque[int]{},
-		notifiedQueue:       deque.Deque[models.Subscription]{},
-		maxQueueSize:        maxSize,
-		inQueue:             make(map[int]struct{}),
-		notificationService: notif,
-	}
-
-	for i := range WORKERS_COUNT {
-		go workerpool.NewQueueWorker(i+1, storage, notif).Process(ctx)
+		wantToPark:    deque.Deque[int]{},
+		notifiedQueue: deque.Deque[models.Subscription]{},
+		maxQueueSize:  maxSize,
+		inQueue:       make(map[int]struct{}),
 	}
 
 	return storage

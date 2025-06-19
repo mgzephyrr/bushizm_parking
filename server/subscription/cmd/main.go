@@ -11,13 +11,17 @@ import (
 	"subscription/internal/notificationapi"
 	"subscription/internal/parkingapi"
 	"subscription/internal/storage/inmem"
+	"subscription/internal/storage/workerpool"
 	"syscall"
 	"time"
 
 	"github.com/joho/godotenv"
 )
 
-const queueSize = 10
+const (
+	queueSize    = 10
+	workersCount = 1
+)
 
 func main() {
 	if err := godotenv.Load("../.env"); err != nil {
@@ -28,8 +32,12 @@ func main() {
 	defer cancel()
 
 	notifService := notificationapi.NewNotificationAPI()
-	queue := inmem.NewInMemStorage(ctx, queueSize, notifService)
+	queue := inmem.NewInMemStorage(ctx, queueSize)
 	parking := parkingapi.NewParkingAPI()
+
+	for i := range workersCount {
+		go workerpool.NewQueueWorker(i+1, queue, notifService).Process(ctx)
+	}
 
 	server := server.NewAPIServer(queue, parking)
 	serverErr := make(chan error, 1)
